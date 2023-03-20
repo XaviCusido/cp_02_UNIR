@@ -1,0 +1,38 @@
+- name: 'CP2 Parte 1'
+  hosts: all
+  remote_user: azureuser
+  become: true
+  tasks:
+    - name: 'Instalar podman'
+      yum:
+        name: 'podman'
+        state: latest
+
+    - name: 'Login to az registry'
+      containers.podman.podman_login:
+        username: acrxavicusido
+        password: 'BSFBkyt+rzIbzCVG1cdIW4yX9U65IjnwAS2xWNtfnP+ACRCa9QO9'
+        registry: acrxavicusido.azurecr.io
+
+    - name: 'Build and push an httpd image using existing credentials'
+      containers.podman.podman_image:
+        name: httpd
+        push: yes
+        push_args:
+          dest: acrxavicusido.azurecr.io
+
+    - name: 'Run container'
+      containers.podman.podman_container:
+        name: container
+        image: acrxavicusido.azurecr.io/httpd:latest
+        state: started
+        ports:
+          - 8080:80
+    - name: 'Install passlib'
+      pip:
+        name:
+          - passlib
+    - name: 'Install cryptography'
+      pip:
+        name:
+          - cryptography            
