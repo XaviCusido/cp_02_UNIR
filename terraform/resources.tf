@@ -1,15 +1,16 @@
+# Creación del grupo de recursos
 resource "azurerm_resource_group" "rg" {
 	name		= var.resource_group_name
 	location	= var.location_name
 }
-
+# Creación de la virtual network
 resource "azurerm_virtual_network" "vnet" {
 	name			= var.network_name
 	address_space		= ["10.0.0.0/16"]
 	location		= azurerm_resource_group.rg.location
 	resource_group_name	= azurerm_resource_group.rg.name
 }
-#Subred
+#Creación de la subred.
 resource "azurerm_subnet" "subnet" {
 	name			= var.subnet_name
 	resource_group_name	= azurerm_resource_group.rg.name
@@ -24,7 +25,7 @@ resource "azurerm_public_ip" "pip" {
 	allocation_method	= "Static"
 	sku			= "Standard"
 }
-
+# Creación de la nic para la VM asociación de la virtual IP.
 resource "azurerm_network_interface" "nic" {
 
   name                = "vnic"
@@ -40,7 +41,7 @@ resource "azurerm_network_interface" "nic" {
   }
 
 }
-
+# Creación de la VM Linux, con un usuario y vinculación de la nic.
 resource "azurerm_linux_virtual_machine" "vm" {
 
   name                = "vm1"
@@ -52,7 +53,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   	azurerm_network_interface.nic.id,
   ]
 
- 
+# Creación credenciales de acceso SSH. 
 admin_ssh_key {
 
     username   = "azureuser"
@@ -83,7 +84,7 @@ os_disk {
 
   }
 }
-
+# Creación del grupo de seguridad con dos reglas para el pueto 22 y 80.
 resource "azurerm_network_security_group" "nsg1" {
   name                = "securitygroup"
   location            = azurerm_resource_group.rg.location
@@ -113,13 +114,13 @@ resource "azurerm_network_security_group" "nsg1" {
   }
 
 }
-
+# Asociación del network security group con la subnet.
 resource "azurerm_subnet_network_security_group_association" "nsg-link" {
   subnet_id                 = azurerm_subnet.subnet.id
   network_security_group_id = azurerm_network_security_group.nsg1.id
 }
 
-
+# Creación del container registry.
 resource "azurerm_container_registry" "acr" {
   name                = "acrxavicusido"
   resource_group_name = azurerm_resource_group.rg.name
@@ -127,7 +128,7 @@ resource "azurerm_container_registry" "acr" {
   sku                 = "Standard"
   admin_enabled       = false
 }
-
+# Creación del AKS.
 resource "azurerm_kubernetes_cluster" "k8s" {
   name                = "example-aks1"
   location            = azurerm_resource_group.rg.location
